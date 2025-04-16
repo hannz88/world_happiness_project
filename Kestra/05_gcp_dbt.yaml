@@ -12,10 +12,10 @@ inputs:
 tasks:
   - id: sync
     type: io.kestra.plugin.git.SyncNamespaceFiles
-    url: https://github.com/DataTalksClub/data-engineering-zoomcamp
+    url: https://github.com/hannz88/world_happiness_project
     branch: main
     namespace: "{{flow.namespace}}"
-    gitDirectory: 04-analytics-engineering/taxi_rides_ny
+    gitDirectory: Dbt/world_happiness
     dryRun: false
     # disabled: true # this Git Sync is needed only when running it the first time, afterwards the task can be disabled
 
