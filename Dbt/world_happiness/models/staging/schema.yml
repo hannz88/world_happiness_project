@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: staging
+    database: de-zoomcamp-project-456022
+    schema: world_happiness_report
+
+    tables:
+      - name: world_happiness

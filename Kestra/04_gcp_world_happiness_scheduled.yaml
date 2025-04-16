@@ -1,0 +1,159 @@
+id: 04_gcp_world_happiness_scheduled
+namespace: zoomcamp
+description: |
+  The CSV Data used: https://www.kaggle.com/datasets/usamabuttar/world-happiness-report-2005-present/data
+
+variables:
+  file: "world_happiness_report.csv"
+  gcs_file: "gs://{{kv('GCP_BUCKET_NAME')}}/{{vars.file}}"
+  table: "{{kv('GCP_DATASET')}}.world_happiness_report"
+  data: "{{outputs.extract.outputFiles['world_happiness_report.csv']}}"
+
+tasks:
+  - id: set_label
+    type: io.kestra.plugin.core.execution.Labels
+    labels:
+      file: "{{render(vars.file)}}"
+
+  - id: extract
+    type: io.kestra.plugin.scripts.python.Commands
+    namespaceFiles:
+      enabled: true
+    outputFiles:
+      - "*.csv"
+    env:
+      KAGGLE_USERNAME: "{{kv('KAGGLE_USER')}}"
+      KAGGLE_KEY: "{{kv('KAGGLE_KEY')}}"
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    beforeCommands:
+      - pip install kagglehub[pandas-datasets] > /dev/null
+    commands:
+      - python connecting_to_source_data_schedule.py
+
+  - id: upload_to_gcs
+    type: io.kestra.plugin.gcp.gcs.Upload
+    from: "{{render(vars.data)}}"
+    to: "{{render(vars.gcs_file)}}"
+
+  - id: world_happiness_data
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE TABLE IF NOT EXISTS `{{kv('GCP_PROJECT_ID')}}.{{kv('GCP_DATASET')}}.world_happiness`
+      (
+          Unique_row_id BYTES,
+          Filename STRING,
+          Year_date DATE,
+          Country_Name STRING, 
+          Regional_Indicator STRING, 
+          Year BIGINT, 
+          Life_Ladder FLOAT64, 
+          Log_GDP_Per_Capita FLOAT64, 
+          Social_Support FLOAT64, 
+          Healthy_Life_Expectancy_At_Birth FLOAT64, 
+          Freedom_To_Make_Life_Choices FLOAT64, 
+          Generosity FLOAT64, 
+          Perceptions_Of_Corruption FLOAT64, 
+          Positive_Affect FLOAT64, 
+          Negative_Affect FLOAT64, 
+          Confidence_In_National_Government FLOAT64
+      )
+      PARTITION BY DATE(year_date);
+
+  - id: world_happiness_ext
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE OR REPLACE EXTERNAL TABLE `{{kv('GCP_PROJECT_ID')}}.{{render(vars.table)}}_ext`
+      (
+          Country_Name STRING, 
+          Regional_Indicator STRING, 
+          Year BIGINT, 
+          Life_Ladder FLOAT64, 
+          Log_GDP_Per_Capita FLOAT64, 
+          Social_Support FLOAT64, 
+          Healthy_Life_Expectancy_At_Birth FLOAT64, 
+          Freedom_To_Make_Life_Choices FLOAT64, 
+          Generosity FLOAT64, 
+          Perceptions_Of_Corruption FLOAT64, 
+          Positive_Affect FLOAT64, 
+          Negative_Affect FLOAT64, 
+          Confidence_In_National_Government FLOAT64
+      )
+      OPTIONS (
+          format = 'CSV',
+          uris = ['{{render(vars.gcs_file)}}'],
+          skip_leading_rows = 1,
+          ignore_unknown_values = TRUE
+      );
+
+  - id: world_happiness_tmp
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE OR REPLACE TABLE `{{kv('GCP_PROJECT_ID')}}.{{render(vars.table)}}`
+      AS
+      SELECT
+        MD5(CONCAT(
+          COALESCE(CAST(Year AS STRING), ""),
+          COALESCE(CAST(Country_Name AS STRING), ""),
+          COALESCE(CAST(Life_Ladder AS STRING), "")
+        )) AS Unique_row_id,
+        "{{render(vars.file)}}" AS Filename,
+        DATE(Year, 01, 01) as Year_date,
+        *
+      FROM `{{kv('GCP_PROJECT_ID')}}.{{render(vars.table)}}_ext`;
+
+  - id: world_happiness_merge
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      MERGE INTO `{{kv('GCP_PROJECT_ID')}}.{{kv('GCP_DATASET')}}.world_happiness` as T
+      USING (SELECT DISTINCT * FROM `{{kv('GCP_PROJECT_ID')}}.{{render(vars.table)}}`) as S
+      ON T.Unique_row_id=S.Unique_row_id
+      WHEN NOT MATCHED THEN
+        INSERT (Unique_row_id,Filename,Year_date,Country_Name,
+                Regional_Indicator, 
+                Year, 
+                Life_Ladder, 
+                Log_GDP_Per_Capita, 
+                Social_Support, 
+                Healthy_Life_Expectancy_At_Birth, 
+                Freedom_To_Make_Life_Choices, 
+                Generosity, 
+                Perceptions_Of_Corruption, 
+                Positive_Affect, 
+                Negative_Affect, 
+                Confidence_In_National_Government)
+        VALUES (
+          S.Unique_row_id,
+          S.Filename,
+          S.Year_date,
+          S.Country_Name,
+          S.Regional_Indicator, 
+          S.Year, 
+          S.Life_Ladder, 
+          S.Log_GDP_Per_Capita, 
+          S.Social_Support, 
+          S.Healthy_Life_Expectancy_At_Birth, 
+          S.Freedom_To_Make_Life_Choices, 
+          S.Generosity, 
+          S.Perceptions_Of_Corruption, 
+          S.Positive_Affect, 
+          S.Negative_Affect, 
+          S.Confidence_In_National_Government);
+
+  - id: purge_files
+    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
+    description: If you'd like to explore Kestra outputs, disable it.
+    disabled: false
+
+pluginDefaults:
+  - type: io.kestra.plugin.gcp
+    values:
+      serviceAccount: "{{kv('GCP_CREDS')}}"
+      projectId: "{{kv('GCP_PROJECT_ID')}}"
+      location: "{{kv('GCP_LOCATION')}}"
+      bucket: "{{kv('GCP_BUCKET_NAME')}}"
+
+triggers:
+  - id: world_happiness_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 0 1 * *"

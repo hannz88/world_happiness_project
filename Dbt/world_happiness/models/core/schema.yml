@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: dim_country_region
+    description: >
+      List of the countries and their respective region
+
+  - name: fact_world_happiness
+    description: >
+      Shows the happiness_score and other factors by country and year
+
+  - name: avg_happiness
+    description: >
+      Aggregate of the average metrics by country
