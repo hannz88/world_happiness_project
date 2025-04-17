@@ -10,7 +10,7 @@ World Happiness Report is a global wellbeing report published yearly that also i
 - **Orchestration and Data ingestion :** Here, we're using Kestra by running Python script that connects to Kaggle via its API. Then, Kestra helps to facilitate loading the data onto Google Cloud bucket before loading it to the datawarehouse.
 - **Data Warehouse:** Here, we're using Google BigQuery DataWarehouse to store the data by partitioning the table by Date. Note that the original data contains only year. 
 - **Data Transformation:** dbt builds data models and metrics for analysis.
-- **Visualization:** after build, data is ready to be visualized.
+- **Visualization:** after build, data is then visualized using Looker.
 
 ## **Project Structure**
 - **`terraform/`**: Contains Terraform configurations.
@@ -24,6 +24,9 @@ After running terraform apply, ssh into the virtual machine that it creates and 
 ```shell
 sudo chmod a+w /mnt/disks/gce-containers-mounts/gce-persistent-disks/data-disk-0/
 ```
+```shell
+sudo chmod 666 /var/run/docker.sock
+```
 
 To open Kestra, navigate to the created VM's public ip at the port 8080. 
 After importing and running the `Kestra/01_gcp_kv.yaml` file, navigate to Namespace's KV Store and update `KAGGLE_KEY` and `KAGGLE_USER`.
@@ -32,3 +35,6 @@ Finally, run the following to get the service_account details:
 terraform output service_account > temp_sa.json
 ```
 Copy and paste the content of the `temp_sa.json` into the `GCP_CREDS` KV.
+
+## **Looker**
+The link to the public visualization is here: https://lookerstudio.google.com/reporting/dc99d0ef-20ff-49cf-9995-de3a5c72f1f2

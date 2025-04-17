@@ -4,6 +4,9 @@ module "gce-container" {
 
   container = {
     image = "kestra/kestra:v0.21.12"
+    securityContext = {
+      privileged : true
+    }
     args = [
       "server",
       "standalone"
@@ -52,12 +55,23 @@ EOT
         name      = "data-disk-0"
         readOnly  = false
       },
+      {
+        mountPath = "/var/run/docker.sock"
+        name      = "docker-sock"
+        readOnly  = false
+      },
     ]
     depends_on = [google_sql_user.users]
   }
 
   # Declare the Volumes which will be used for mounting.
   volumes = [
+    {
+      name = "docker-sock"
+      host_path = {
+        path = "/var/run/docker.sock"
+      }
+    },
     {
       name = "tempfs-0"
 

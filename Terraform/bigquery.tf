@@ -3,7 +3,6 @@ resource "google_bigquery_dataset" "dataset" {
   friendly_name               = var.gcp_dataset
   description                 = "This is a test description"
   location                    = var.gcp_location
-  default_table_expiration_ms = 3600000
 
   labels = {
     env = "default"
