@@ -1,6 +1,6 @@
 # World Happiness Report Workflow
 
-![Workflow for World Happiness Report](./image/World_Happiness_workflow.png)
+![Workflow for World Happiness Report](/image/World_Happiness_workflow.png)
 
 ## **Problem description**
 
