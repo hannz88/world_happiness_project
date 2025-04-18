@@ -131,3 +131,4 @@ terraform.rc
 /Getting_data_pipeline_original.ipynb
 /Terraform/.terraform.lock.hcl
 /.idea/dataSources.xml
+/Terraform/tfplan

@@ -36,5 +36,15 @@ terraform output service_account > temp_sa.json
 ```
 Copy and paste the content of the `temp_sa.json` into the `GCP_CREDS` KV.
 
+Afterwards, upload other Kestra yaml files onto Kestra and run them separately. `04_gcp_world_happiness_scheduled.yaml` was the script for running the script automatically at a scheduled time. We're running this at 1 minute past 0000. THis does not need to be run on the first time.
+
+Then, run the `05_gcp_dbt.yaml` file. This will sync all the `dbt` files from this repo and transform the tables from the datawarehouse.
+
+Please ensure that the values for the following are correct in the namespace:
+- dataset
+- project
+- location
+
+
 ## **Looker**
 The link to the public visualization is here: https://lookerstudio.google.com/reporting/dc99d0ef-20ff-49cf-9995-de3a5c72f1f2
