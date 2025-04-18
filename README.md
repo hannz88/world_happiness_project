@@ -1,8 +1,10 @@
 # World Happiness Report Workflow
 
+![Workflow for World Happiness Report](./image/World_Happiness_workflow.png)
+
 ## **Problem description**
 
-World Happiness Report is a global wellbeing report published yearly that also include the metrics on several other factors that affect wellbeing of a population. This project implements a data pipeline for getting the data from Kaggle and processing it using Terraform, Kestra and dbt.
+World Happiness Report is a global wellbeing report published yearly that also include the metrics on several other factors that affect wellbeing of a population. This project implements a data pipeline for getting the data from Kaggle and processing it using Terraform, Kestra and dbt. The report is then visualised on Looker.
 
 
 ## **Features**
