@@ -1,6 +1,8 @@
 # World Happiness Report Workflow
 
-![Workflow for World Happiness Report](https://github.com/hannz88/world_happiness_project/blob/main/Image/World_Happiness_workflow.png)
+<p align="center">
+<img src="https://github.com/hannz88/world_happiness_project/blob/main/Image/World_Happiness_workflow.png" width="400px"/>
+</p>
 
 ## **Problem description**
 
